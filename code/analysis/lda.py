@@ -20,7 +20,7 @@
 ###########################################################################
 
 import pandas as pd 
-# import pyLDAvis
+import numpy as np
 import gensim
 from collections import defaultdict
 import os
@@ -39,19 +39,62 @@ NUM_TOPICS = 40
 # path info  - call from root
 ROOT_DIR = os.getcwd()
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
-CLEAN_DATA_FILE = os.path.join(DATA_DIR, 'speeches_ngrams.csv')
+CLEAN_DATA_FILE = os.path.join(DATA_DIR, 'master_df.csv')
+DF_WITH_LDA = 'dates_{}_topic_lda.csv'.format(NUM_TOPICS)
 
 ###########################################################################
 # Functions
 ###########################################################################
 
 def get_ngrams(df): 
+
     def ngram_str_to_lst(ngram_str):
         if isinstance(ngram_str, float): 
             ngram_str = ''
         return ngram_str.split('.')
+
     col = df[N_GRAMS].copy()
     return col.apply(ngram_str_to_lst)
+
+def print_topics(): 
+    global lda_model
+    for idx, topic in lda_model.print_topics(-1):
+        print('Topic: {} \nWords: {}'.format(idx, topic), end='\n\n')
+
+def get_num_topics_per_period(loops = 1): 
+    global df, corpus, vocab_dict, lda_model, NUM_TOPICS
+
+    topics_per_section = [[] for i in range(len(corpus))]
+    dates = df['Date'].copy()
+    
+    for loop in range(loops):
+
+        print('Fitting model...')
+        lda_model = gensim.models.LdaMulticore(corpus=corpus, id2word=vocab_dict, num_topics=NUM_TOPICS, passes=2, workers=2)
+        
+        # find best topic for each speech period
+        for i, row in enumerate(lda_model[corpus]):
+
+            # print('\n---------------- Speeches before meeting {}'.format(dates.iloc[i]))
+            row = sorted(row, key=lambda x: (x[1]), reverse=True)
+            for j, (topic_num, prop_topic) in enumerate(row): 
+                wp = lda_model.show_topic(topic_num)
+                # print('Topic: {}, {}'.format(topic_num, prop_topic))
+                # print(', '.join([word for word, prop in wp]))      
+
+            n_topics = len(row)
+            topics_per_section[i].append(n_topics)
+            # print('{} TOPICS'.format(n_topics))
+
+    # find the average number of topics
+    topics_per_section = list(map(np.mean, topics_per_section))
+
+    data = {
+        'Date': dates, 
+        'Num Topics': topics_per_section
+    }
+
+    return pd.DataFrame(data)
 
 ###########################################################################
 # Main
@@ -61,7 +104,8 @@ if __name__ == '__main__':
 
     # read data
     print('Reading data...')
-    df = pd.read_csv(CLEAN_DATA_FILE).drop('Unnamed: 0', axis=1).set_index('Date')
+    df = pd.read_csv(CLEAN_DATA_FILE).drop('Unnamed: 0', axis=1)
+    dates = df['Date'].copy()
    
     # get ngrams, build vocab, and bag of ngrams
     doc_ngrams = get_ngrams(df)
@@ -69,24 +113,10 @@ if __name__ == '__main__':
     vocab_dict.filter_extremes(no_below=15, no_above=0.25, keep_n=VOCAB_SIZE)
     corpus = [vocab_dict.doc2bow(doc) for doc in doc_ngrams]
 
-    # look at contents and mappings
-    # print(df['articles_stemmed'].iloc[1233])
-    # doci = bag_of_ngrams[1233]
-    # for j in range(len(doci)):
-    #     print("Word {} (\"{}\") appears {} time.".format(doci[j][0], vocab_dict[doci[j][0]], doci[j][1]))
+    topics_per_period = get_num_topics_per_period(loops=5)
+    df = df.merge(topics_per_period, on='Date')
+    print(df[['Date', 'Num Topics']].head(10))
 
-    print('Fitting model...')
-    lda_model = gensim.models.LdaMulticore(corpus=corpus, id2word=vocab_dict, num_topics=NUM_TOPICS, passes=2, workers=2)
-    for idx, topic in lda_model.print_topics(-1):
-        print('Topic: {} \nWords: {}'.format(idx, topic), end='\n\n')
+    df.to_csv(DF_WITH_LDA)
+    
 
-    # find best topic for each speech 
-    for i, row in enumerate(lda_model[corpus[10:12]]):
-        print(i)
-        row = sorted(row, key=lambda x: (x[1]), reverse=True)
-        for j, (topic_num, prop_topic) in enumerate(row): 
-            print(topic_num, prop_topic)
-            wp = lda_model.show_topic(topic_num)
-            print(', '.join([word for word, prop in wp]))      
-
-    #print(df['Text'].iloc[10])
