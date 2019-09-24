@@ -1,3 +1,11 @@
+#######################################################################
+# Goal   : take dataframe with date | speaker | text and add a column
+#          with the 1, 2, and 3 gram versions
+
+# Author : Stephen Lee 
+# Date   : 9.23.19
+#######################################################################
+
 import pandas as pd 
 from gensim.parsing.porter import PorterStemmer
 from datetime import datetime
@@ -44,7 +52,7 @@ def ngrams(txt, n_gram=1):
     '''
     INPUT   : txt    -> text in alpha only, stemmed, form
             : n_gram -> the length of each phrase to generate
-    OUTPUT  : a string of ngram phrases
+    OUTPUT  : a string of '.' separated ngram phrases
     '''
     token = [t for t in txt.split(' ')]
     ngrams = zip(*[token[i:] for i in range(n_gram)])
