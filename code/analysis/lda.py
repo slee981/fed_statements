@@ -35,12 +35,14 @@ N = 2
 N_GRAMS = '{}-gram'.format(N)
 VOCAB_SIZE = 15000
 NUM_TOPICS = 40
+LOOPS = 1
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
 CLEAN_DATA_FILE = os.path.join(DATA_DIR, 'master_df.csv')
-DF_WITH_LDA = 'dates_{}_topic_lda.csv'.format(NUM_TOPICS)
+DF_WITH_LDA = os.path.join(DATA_DIR, 'dates_{}_topic_lda_{}_loop.csv'.format(NUM_TOPICS, LOOPS))
+LDA_FILE_NAME = os.path.join(DATA_DIR, 'models', '{}_topic_lda'.format(NUM_TOPICS))
 
 ###########################################################################
 # Functions
@@ -71,6 +73,12 @@ def get_num_topics_per_period(loops = 1):
 
         print('Fitting model...')
         lda_model = gensim.models.LdaMulticore(corpus=corpus, id2word=vocab_dict, num_topics=NUM_TOPICS, passes=2, workers=2)
+
+        print('Saving model...')
+        lda_model.save(LDA_FILE_NAME)
+        
+        # to reload...
+        # lda = gensim.models.LdaMulticore.load(LDA_FILE_NAME)
         
         # find best topic for each speech period
         for i, row in enumerate(lda_model[corpus]):
@@ -113,10 +121,10 @@ if __name__ == '__main__':
     vocab_dict.filter_extremes(no_below=15, no_above=0.25, keep_n=VOCAB_SIZE)
     corpus = [vocab_dict.doc2bow(doc) for doc in doc_ngrams]
 
-    topics_per_period = get_num_topics_per_period(loops=5)
+    topics_per_period = get_num_topics_per_period(loops=LOOPS)
     df = df.merge(topics_per_period, on='Date')
     print(df[['Date', 'Num Topics']].head(10))
 
+    print('Saving dataframe...')
     df.to_csv(DF_WITH_LDA)
-    
-
+    print('Saved.')
