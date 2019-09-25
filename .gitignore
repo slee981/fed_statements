@@ -1,3 +1,6 @@
 *.ini
 .dropbox
-models/
+data/* 
+!data/fed_board/ 
+!data/fomc_decisions.csv
+
