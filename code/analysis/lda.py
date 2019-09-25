@@ -2,18 +2,7 @@
 # Notes
 ###########################################################################
 # LDA analysis tries to find latent topics and the words that are
-# associated with them. Many ways to spin it, but so far one interesting 
-# bit is that with the following params: 
-#
-# VOCAB_SIZE = 15000
-# LDA_SUBSET = True
-# SOURCE_ONE = 'Vox'
-# SOURCE_TWO = 'Fox'
-#
-# We get two arguably different topics: 
-# - taxes and healthcare 
-# - boarder wall, border security, etc 
-
+# associated with them.
 
 ###########################################################################
 # Imports
@@ -35,14 +24,15 @@ N = 2
 N_GRAMS = '{}-gram'.format(N)
 VOCAB_SIZE = 15000
 NUM_TOPICS = 40
-LOOPS = 1
+LOOPS = 5
+PCT_TOPIC_THRESHOLD = 0.05
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
 CLEAN_DATA_FILE = os.path.join(DATA_DIR, 'master_df.csv')
 DF_WITH_LDA = os.path.join(DATA_DIR, 'dates_{}_topic_lda_{}_loop.csv'.format(NUM_TOPICS, LOOPS))
-LDA_FILE_NAME = os.path.join(DATA_DIR, 'models', '{}_topic_lda'.format(NUM_TOPICS))
+LDA_FILE_NAME_TEMPLATE = os.path.join(DATA_DIR, 'models', '{}_topic_lda_{}_loop')
 
 ###########################################################################
 # Functions
@@ -75,7 +65,8 @@ def get_num_topics_per_period(loops = 1):
         lda_model = gensim.models.LdaMulticore(corpus=corpus, id2word=vocab_dict, num_topics=NUM_TOPICS, passes=2, workers=2)
 
         print('Saving model...')
-        lda_model.save(LDA_FILE_NAME)
+        lda_fname = LDA_FILE_NAME_TEMPLATE.format(NUM_TOPICS, loop + 1)
+        lda_model.save(lda_fname)
         
         # to reload...
         # lda = gensim.models.LdaMulticore.load(LDA_FILE_NAME)
@@ -83,16 +74,14 @@ def get_num_topics_per_period(loops = 1):
         # find best topic for each speech period
         for i, row in enumerate(lda_model[corpus]):
 
-            # print('\n---------------- Speeches before meeting {}'.format(dates.iloc[i]))
-            row = sorted(row, key=lambda x: (x[1]), reverse=True)
-            for j, (topic_num, prop_topic) in enumerate(row): 
-                wp = lda_model.show_topic(topic_num)
-                # print('Topic: {}, {}'.format(topic_num, prop_topic))
-                # print(', '.join([word for word, prop in wp]))      
+            # count topics with percent contribution > threshold
+            n_topics = 0
+            for topic_num, pct_topic in row: 
+                
+                if pct_topic > PCT_TOPIC_THRESHOLD: 
+                    n_topics += 1 
 
-            n_topics = len(row)
             topics_per_section[i].append(n_topics)
-            # print('{} TOPICS'.format(n_topics))
 
     # find the average number of topics
     topics_per_section = list(map(np.mean, topics_per_section))
