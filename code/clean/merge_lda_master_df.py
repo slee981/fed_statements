@@ -19,19 +19,20 @@ import os
 ###########################################################################
 
 # specs 
-MIN_SPEECH_LENGTH = 50
+NUM_TOPICS = 10
+PCT_TOPIC_THRESHOLD = 0.05
+
 N = 2
 N_GRAMS = '{}-gram'.format(N)
 VOCAB_SIZE = 15000
-NUM_TOPICS = 40
-LOOPS = 5
-PCT_TOPIC_THRESHOLD = 0.05
+MIN_SPEECH_LENGTH = 50
+LOOPS = 1
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
-CLEAN_DATA_FILE = os.path.join(DATA_DIR, 'master_df.csv')
-DF_WITH_LDA = os.path.join(DATA_DIR, 'dates_{}_topic_lda_{}_loop.csv'.format(NUM_TOPICS, LOOPS))
+MASTER_DF = os.path.join(DATA_DIR, 'master_df.csv')
+DF_WITH_LDA = os.path.join(DATA_DIR, '{}_topic_lda_{}_loop.csv'.format(NUM_TOPICS, LOOPS))
 LDA_FILE_NAME_TEMPLATE = os.path.join(DATA_DIR, 'models', '{}_topic_lda_{}_loop')
 
 ###########################################################################
@@ -39,12 +40,10 @@ LDA_FILE_NAME_TEMPLATE = os.path.join(DATA_DIR, 'models', '{}_topic_lda_{}_loop'
 ###########################################################################
 
 def get_ngrams(df): 
-
     def ngram_str_to_lst(ngram_str):
         if isinstance(ngram_str, float): 
             ngram_str = ''
         return ngram_str.split('.')
-
     col = df[N_GRAMS].copy()
     return col.apply(ngram_str_to_lst)
 
@@ -56,6 +55,7 @@ def print_topics():
 def get_num_topics_per_period(loops = 1): 
     global df, corpus, vocab_dict, lda_model, NUM_TOPICS
 
+    topics_dist_per_section = [[None for i in range(NUM_TOPICS)] for i in range(len(corpus))]
     topics_per_section = [[] for i in range(len(corpus))]
     dates = df['Date'].copy()
     
@@ -79,7 +79,10 @@ def get_num_topics_per_period(loops = 1):
             for topic_num, pct_topic in row: 
                 
                 if pct_topic > PCT_TOPIC_THRESHOLD: 
+                    topics_dist_per_section[i][topic_num] = pct_topic
                     n_topics += 1 
+                else: 
+                    topics_dist_per_section[i][topic_num] = 0
 
             topics_per_section[i].append(n_topics)
 
@@ -88,7 +91,8 @@ def get_num_topics_per_period(loops = 1):
 
     data = {
         'Date': dates, 
-        'Num Topics': topics_per_section
+        'Num Topics': topics_per_section, 
+        'Topic Dist': topics_dist_per_section
     }
 
     return pd.DataFrame(data)
@@ -101,9 +105,9 @@ if __name__ == '__main__':
 
     # read data
     print('Reading data...')
-    df = pd.read_csv(CLEAN_DATA_FILE).drop('Unnamed: 0', axis=1)
+    df = pd.read_csv(MASTER_DF).drop('Unnamed: 0', axis=1)
     dates = df['Date'].copy()
-   
+
     # get ngrams, build vocab, and bag of ngrams
     doc_ngrams = get_ngrams(df)
     vocab_dict = gensim.corpora.Dictionary(doc_ngrams)
@@ -112,6 +116,7 @@ if __name__ == '__main__':
 
     topics_per_period = get_num_topics_per_period(loops=LOOPS)
     df = df.merge(topics_per_period, on='Date')
+    print(df.columns)
     print(df[['Date', 'Num Topics']].head(10))
 
     print('Saving dataframe...')

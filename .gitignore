@@ -4,3 +4,4 @@ data/*
 !data/fed_board/ 
 !data/fomc_decisions.csv
 
+*.ipynb_checkpoints

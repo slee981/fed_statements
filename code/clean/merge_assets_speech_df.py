@@ -18,6 +18,7 @@ ROOT_DIR = os.getcwd()
 DATA_DIR = 'data'
 SPEECHES = os.path.join(ROOT_DIR, DATA_DIR, 'speeches_ngrams.csv')
 FOMC_DECISIONS = os.path.join(ROOT_DIR, DATA_DIR, 'fomc_decisions.csv')
+ASSETS = os.path.join(ROOT_DIR, DATA_DIR, 'assets.csv')
 STOP_WORDS = os.path.join(ROOT_DIR, 'code', 'clean', 'stopwords.txt')
 MASTER_DF_FILE = os.path.join(ROOT_DIR, DATA_DIR, 'master_df.csv')
 FIRST_DATE_IN_SET = '2006-01-01'
@@ -25,21 +26,15 @@ FIRST_DATE_IN_SET = '2006-01-01'
 # prepare dataframes
 speeches_df = pd.read_csv(SPEECHES, usecols=['Date', '2-gram']).drop_duplicates(subset='2-gram')
 speeches_df['Date'] = pd.to_datetime(speeches_df['Date'])
-speeches_df = speeches_df.sort_values(by='Date', ascending=False)
-
-# descriptive
-# speeches_df['Year'] = speeches_df['Date'].apply(lambda x: x.year)
-# print(speeches_df.groupby('Year').describe())
+speeches_df = speeches_df.sort_values(by='Date', ascending=False).reset_index()
 
 fomc_df = pd.read_csv(FOMC_DECISIONS)
-fomc_df['Date'] = pd.to_datetime(fomc_df['Release Date'] + ' ' + fomc_df['Time'])
+fomc_df['Date'] = pd.to_datetime(fomc_df['Release Date'])
 fomc_df = fomc_df.drop(['Release Date', 'Time'], axis=1).dropna()
-fomc_df = fomc_df[fomc_df['Date'] > FIRST_DATE_IN_SET].sort_values(by='Date', ascending=False)
+fomc_df = fomc_df[fomc_df['Date'] > FIRST_DATE_IN_SET].sort_values(by='Date', ascending=False).reset_index()
 
-# descriptive
-# print(fomc_df.head())
-# print(speeches_df.columns)
-# print(speeches_df['Date'].head(20))
+assets_df = pd.read_csv(ASSETS).drop('Unnamed: 0', axis=1)
+assets_df['Date'] = pd.to_datetime(assets_df['Date'])
 
 ###########################################################################
 # Functions
@@ -89,7 +84,7 @@ def get_speeches_between_meetings(speeches_df, fomc_df):
         print('Speech date at idx {} is {}'.format(speech_idx, speech_dates.iloc[speech_idx]))
         while ((speech_idx < num_speeches) and
                (speech_dates.iloc[speech_idx] < current_meeting_date) and
-               (speech_dates.iloc[speech_idx] > previous_meeting_date)): 
+               (speech_dates.iloc[speech_idx] >= previous_meeting_date)): 
             print('    Speech date {}'.format(speech_dates.iloc[speech_idx]))
             speech = speech_text.iloc[speech_idx] + '.'
             date = speech_dates.iloc[speech_idx]
@@ -128,7 +123,7 @@ if __name__ =='__main__':
     speeches_between_meetings_df = get_speeches_between_meetings(speeches_df, fomc_df)
 
     # merge data
-    df = df.merge(speeches_between_meetings_df, on = 'Date')
+    df = df.merge(speeches_between_meetings_df, on = 'Date').merge(assets_df, on = 'Date')
 
     df.to_csv(MASTER_DF_FILE)
     
