@@ -19,7 +19,24 @@ LOOPS = 1
 # path info  - call from root
 ROOT_DIR = os.getcwd()
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
-DF_WITH_LDA = os.path.join(DATA_DIR, '{}_topic_lda_{}_loop.csv'.format(NUM_TOPICS, LOOPS))
+DF_WITH_LDA = os.path.join(DATA_DIR, '{}_topic_lda.csv'.format(NUM_TOPICS))
+
+###########################################################################
+# Functions
+###########################################################################
+
+def get_dataframe(df):
+    def str_to_arr(str_arr):
+        return [float(ele) for ele in str_arr.replace('[','').replace(']','').split(',')]
+    topic_dists = df.copy()
+    rows = df.shape[0]
+    num_topics = len(str_to_arr(topic_dists.iloc[0]))
+    x = []
+    cols = ['Topic{}'.format(i+1) for i in range(num_topics)]
+    for r in range(rows): 
+        obs = str_to_arr(topic_dists.iloc[r])
+        x.append(obs)
+    return pd.DataFrame(x, columns=cols)
 
 ###########################################################################
 # Main
@@ -35,20 +52,31 @@ series = [
 # load data 
 df = pd.read_csv(DF_WITH_LDA).drop('Unnamed: 0', axis=1)
 
-x = df['Num Topics']
+x = get_dataframe(df['Topic Dist'])
 xc = sm.add_constant(x)
 
 # specify regression
-y = df['Change 1yr Treasury']             # <- abs value of bps changes
+y = df['Change 1yr Treasury']
 model = sm.OLS(y, xc)
-results = model.fit()
-
-print(results.summary())
+ols_res = model.fit()
+lasso_res = model.fit_regularized(method='elastic_net', alpha=0.9, L1_wt=1.0)
+print(lasso_res.params)
+print(ols_res.summary())
 params = results.params
-intercept, slope = params[0], params[1]
-res = slope * x + intercept 
 
-plt.plot(x,res, '-r')
+'''
+x = get_dataframe(df['Change'])
+y = df['Change 1yr Treasury']
+xc = sm.add_constant(x)
+
+model = sm.OLS(y, xc)
+ols_res = model.fit()
+params = ols_res.params
+intercept, slope = params[0], params[1]
+y_hat = slope * x + intercept 
+
+plt.plot(x,y_hat, '-r')
 plt.scatter(x,y)
 plt.grid()
 plt.show()
+'''

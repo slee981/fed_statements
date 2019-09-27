@@ -24,7 +24,7 @@ MASTER_DF_FILE = os.path.join(ROOT_DIR, DATA_DIR, 'master_df.csv')
 FIRST_DATE_IN_SET = '2006-01-01'
 
 # prepare dataframes
-speeches_df = pd.read_csv(SPEECHES, usecols=['Date', '2-gram']).drop_duplicates(subset='2-gram')
+speeches_df = pd.read_csv(SPEECHES, usecols=['Date', 'stemmed', '2-gram']).drop_duplicates(subset='2-gram')
 speeches_df['Date'] = pd.to_datetime(speeches_df['Date'])
 speeches_df = speeches_df.sort_values(by='Date', ascending=False).reset_index()
 
@@ -51,10 +51,12 @@ def get_speeches_between_meetings(speeches_df, fomc_df):
     # we have dataframes with different dates, speeches and fomc meetings. 
     # we want to keep all text (2-grams) that occurs between meeting dates. 
     
+    raw_speech_between_meetings = []
     speeches_between_meetings = []
     speech_dates_between_meetings = []
     meeting_dates_used = []
 
+    raw_text = speeches_df['stemmed'].copy()
     speech_text = speeches_df['2-gram'].copy()
     speech_dates = speeches_df['Date'].copy()
     meeting_dates = fomc_df['Date'].copy()
@@ -69,7 +71,8 @@ def get_speeches_between_meetings(speeches_df, fomc_df):
         previous_meeting_date = meeting_dates.iloc[idx + 1]
         assert(current_meeting_date > previous_meeting_date)
 
-        all_speech_this_round = ''
+        all_raw_speech_this_round = ' '
+        all_speech_this_round = ' '
         all_speech_dates_this_round = []
 
         # since we sorted speeches by date, we can keep track of the index 
@@ -88,11 +91,14 @@ def get_speeches_between_meetings(speeches_df, fomc_df):
             print('    Speech date {}'.format(speech_dates.iloc[speech_idx]))
             speech = speech_text.iloc[speech_idx] + '.'
             date = speech_dates.iloc[speech_idx]
+            raw_speech = raw_text.iloc[speech_idx] + ' '
 
+            all_raw_speech_this_round += raw_speech
             all_speech_this_round += speech 
             all_speech_dates_this_round.append(date)
             speech_idx += 1
         
+        raw_speech_between_meetings.append(all_raw_speech_this_round)
         speeches_between_meetings.append(all_speech_this_round)
         speech_dates_between_meetings.append(all_speech_dates_this_round)
         meeting_dates_used.append(current_meeting_date)
@@ -106,7 +112,8 @@ def get_speeches_between_meetings(speeches_df, fomc_df):
     data = {
         'Date': meeting_dates_used, 
         '2-gram': speeches_between_meetings, 
-        'Speech Dates': speech_dates_between_meetings
+        'Speech Dates': speech_dates_between_meetings,
+        'Stemmed': raw_speech_between_meetings
     }
     return pd.DataFrame(data)
 
@@ -125,5 +132,6 @@ if __name__ =='__main__':
     # merge data
     df = df.merge(speeches_between_meetings_df, on = 'Date').merge(assets_df, on = 'Date')
 
+    print(df.columns)
     df.to_csv(MASTER_DF_FILE)
     

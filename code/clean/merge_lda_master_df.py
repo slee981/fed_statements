@@ -19,21 +19,20 @@ import os
 ###########################################################################
 
 # specs 
-NUM_TOPICS = 10
+NUM_TOPICS = [i for i in range(9, 15)]
 PCT_TOPIC_THRESHOLD = 0.05
 
 N = 2
 N_GRAMS = '{}-gram'.format(N)
 VOCAB_SIZE = 15000
 MIN_SPEECH_LENGTH = 50
-LOOPS = 1
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
 MASTER_DF = os.path.join(DATA_DIR, 'master_df.csv')
-DF_WITH_LDA = os.path.join(DATA_DIR, '{}_topic_lda_{}_loop.csv'.format(NUM_TOPICS, LOOPS))
-LDA_FILE_NAME_TEMPLATE = os.path.join(DATA_DIR, 'models', '{}_topic_lda_{}_loop')
+DF_WITH_LDA_TEMPLATE = os.path.join(DATA_DIR, '{}_topic_lda.csv')
+LDA_FILE_NAME_TEMPLATE = os.path.join(DATA_DIR, 'models', '{}_topic_lda')
 
 ###########################################################################
 # Functions
@@ -52,42 +51,34 @@ def print_topics():
     for idx, topic in lda_model.print_topics(-1):
         print('Topic: {} \nWords: {}'.format(idx, topic), end='\n\n')
 
-def get_num_topics_per_period(loops = 1): 
-    global df, corpus, vocab_dict, lda_model, NUM_TOPICS
+def get_num_topics_per_period(num_topics): 
+    global df, corpus, vocab_dict, lda_model
 
-    topics_dist_per_section = [[None for i in range(NUM_TOPICS)] for i in range(len(corpus))]
-    topics_per_section = [[] for i in range(len(corpus))]
+    topics_dist_per_section = [[0 for i in range(num_topics)] for i in range(len(corpus))]
+    topics_per_section = []
     dates = df['Date'].copy()
+
+    print('Fitting model with {} topics...'.format(num_topics))
+    lda_model = gensim.models.LdaMulticore(corpus=corpus, id2word=vocab_dict, num_topics=num_topics, passes=2, workers=2)
+
+    print('Saving model...')
+    lda_fname = LDA_FILE_NAME_TEMPLATE.format(num_topics)
+    lda_model.save(lda_fname)
     
-    for loop in range(loops):
+    # to reload...
+    # lda = gensim.models.LdaMulticore.load(LDA_FILE_NAME)
+    
+    # find best topic for each speech period
+    for i, row in enumerate(lda_model[corpus]):
 
-        print('Fitting model...')
-        lda_model = gensim.models.LdaMulticore(corpus=corpus, id2word=vocab_dict, num_topics=NUM_TOPICS, passes=2, workers=2)
+        # count topics with percent contribution > threshold
+        n_topics = 0
+        for topic_num, pct_topic in row: 
+            topics_dist_per_section[i][topic_num] = pct_topic
+            if pct_topic > PCT_TOPIC_THRESHOLD: 
+                n_topics += 1 
 
-        print('Saving model...')
-        lda_fname = LDA_FILE_NAME_TEMPLATE.format(NUM_TOPICS, loop + 1)
-        lda_model.save(lda_fname)
-        
-        # to reload...
-        # lda = gensim.models.LdaMulticore.load(LDA_FILE_NAME)
-        
-        # find best topic for each speech period
-        for i, row in enumerate(lda_model[corpus]):
-
-            # count topics with percent contribution > threshold
-            n_topics = 0
-            for topic_num, pct_topic in row: 
-                
-                if pct_topic > PCT_TOPIC_THRESHOLD: 
-                    topics_dist_per_section[i][topic_num] = pct_topic
-                    n_topics += 1 
-                else: 
-                    topics_dist_per_section[i][topic_num] = 0
-
-            topics_per_section[i].append(n_topics)
-
-    # find the average number of topics
-    topics_per_section = list(map(np.mean, topics_per_section))
+        topics_per_section.append(n_topics)
 
     data = {
         'Date': dates, 
@@ -114,11 +105,13 @@ if __name__ == '__main__':
     vocab_dict.filter_extremes(no_below=15, no_above=0.25, keep_n=VOCAB_SIZE)
     corpus = [vocab_dict.doc2bow(doc) for doc in doc_ngrams]
 
-    topics_per_period = get_num_topics_per_period(loops=LOOPS)
-    df = df.merge(topics_per_period, on='Date')
-    print(df.columns)
-    print(df[['Date', 'Num Topics']].head(10))
+    for n in NUM_TOPICS: 
+        fname = DF_WITH_LDA_TEMPLATE.format(n)
+        topics_per_period = get_num_topics_per_period(num_topics = n)
+        df_final = df.merge(topics_per_period, on='Date')
+        print(df_final.columns)
+        print(df_final[['Date', 'Topic Dist']].head(5))
 
-    print('Saving dataframe...')
-    df.to_csv(DF_WITH_LDA)
-    print('Saved.')
+        print('Saving dataframe...')
+        df_final.to_csv(fname)
+        print('Saved.')
