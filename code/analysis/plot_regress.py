@@ -14,7 +14,6 @@ import os
 
 # specs 
 NUM_TOPICS = 10
-LOOPS = 1
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()
@@ -25,7 +24,7 @@ DF_WITH_LDA = os.path.join(DATA_DIR, '{}_topic_lda.csv'.format(NUM_TOPICS))
 # Functions
 ###########################################################################
 
-def get_dataframe(df):
+def get_topic_dataframe(df):
     def str_to_arr(str_arr):
         return [float(ele) for ele in str_arr.replace('[','').replace(']','').split(',')]
     topic_dists = df.copy()
@@ -52,17 +51,19 @@ series = [
 # load data 
 df = pd.read_csv(DF_WITH_LDA).drop('Unnamed: 0', axis=1)
 
-x = get_dataframe(df['Topic Dist'])
+x = get_topic_dataframe(df['Topic Dist'])
 xc = sm.add_constant(x)
 
+x_restricted = x[['Topic1', 'Topic7', 'Topic9']].copy()  # <- suggested by lasso regression w/ alpha = 0.3
+xc = sm.add_constant(x_restricted)
+
 # specify regression
-y = df['Change 1yr Treasury']
+y = df['Change'] * 10**4
 model = sm.OLS(y, xc)
 ols_res = model.fit()
-lasso_res = model.fit_regularized(method='elastic_net', alpha=0.9, L1_wt=1.0)
+lasso_res = model.fit_regularized(method='elastic_net', alpha=0.3, L1_wt=1.0)
 print(lasso_res.params)
 print(ols_res.summary())
-params = results.params
 
 '''
 x = get_dataframe(df['Change'])

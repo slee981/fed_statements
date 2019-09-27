@@ -25,8 +25,8 @@ LOOP = 5
 # path info  - call from root
 ROOT_DIR = os.getcwd()
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
-DF_WITH_LDA = os.path.join(DATA_DIR, '{}_topic_lda_{}_loop.csv'.format(NUM_TOPICS, LOOP))
-LDA_FILE_NAME = os.path.join(DATA_DIR, 'models', '{}_topic_lda_{}_loop'.format(NUM_TOPICS, LOOP))
+DF_WITH_LDA = os.path.join(DATA_DIR, '{}_topic_lda.csv'.format(NUM_TOPICS))
+LDA_FILE_NAME = os.path.join(DATA_DIR, 'models', '{}_topic_lda'.format(NUM_TOPICS))
 
 ###########################################################################
 # Functions
