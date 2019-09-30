@@ -14,13 +14,13 @@ import os
 ###########################################################################
 
 # specs 
-NUM_TOPICS = 20
+NUM_TOPICS = range(9,21)
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
-DF_WITH_LDA = os.path.join(DATA_DIR, '{}_topic_lda.csv'.format(NUM_TOPICS))
-LDA_FILE_NAME = os.path.join(DATA_DIR, 'models', '{}_topic_lda'.format(NUM_TOPICS))
+DF_WITH_LDA_TEMPLATE = os.path.join(DATA_DIR, '{}_topic_lda.csv')
+LDA_FILE_NAME_TEMPLATE = os.path.join(DATA_DIR, 'models', '{}_topic_lda')
 
 ###########################################################################
 # Functions
@@ -43,34 +43,42 @@ def get_topic_dataframe(df):
 # Main
 ###########################################################################
 
-# series labels 
-series = [
-    'Change', 'Change 1yr Treasury', 'Change 5yr Treasury',
-    'Change 10yr Treasury', 'Change 30yr Treasury',
-    'Change Implied Fed Fund', 'Change SP500', 'Change SP500 Finance'
-]
+# series_available = [
+#     'Change', 'Change 1yr Treasury', 'Change 5yr Treasury',
+#     'Change 10yr Treasury', 'Change 30yr Treasury',
+#     'Change Implied Fed Fund', 'Change SP500', 'Change SP500 Finance'
+# ]
 
-# load data 
-df = pd.read_csv(DF_WITH_LDA).drop('Unnamed: 0', axis=1)
-lda = gensim.models.LdaMulticore.load(LDA_FILE_NAME)
+for n in NUM_TOPICS: 
+    df_fname = DF_WITH_LDA_TEMPLATE.format(n)
+    lda_fname = LDA_FILE_NAME_TEMPLATE.format(n)
 
-# used for lasso 
-x = get_topic_dataframe(df['Topic Dist'])
-xc = sm.add_constant(x)
+    # load data 
+    df = pd.read_csv(df_fname).drop('Unnamed: 0', axis=1)
+    lda = gensim.models.LdaMulticore.load(lda_fname)
 
-y = df['Change'] * 10**4
-model = sm.OLS(y, xc)
-lasso_res = model.fit_regularized(method='elastic_net', alpha=0.3, L1_wt=1.0)
-print(lasso_res.params)
+    # used for lasso 
+    x = get_topic_dataframe(df['Topic Dist'])
+    xc = sm.add_constant(x)
 
-# used for restricted ols
-x_restricted = x[['Topic6', 'Topic10', 'Topic12', 'Topic14', 'Topic17']].copy()  # <- suggested by lasso regression w/ alpha = 0.3
-xc = sm.add_constant(x_restricted)
+    y = df['Change'] * 10**4
+    model = sm.OLS(y, xc)
+    lasso_res = model.fit_regularized(method='elastic_net', alpha=0.3, L1_wt=1.0)
+    params = lasso_res.params.drop('const')
+    keep_idxs = [i for i, coef in enumerate(params) if coef != 0]
+    keep_names = params.index[keep_idxs]
 
-# specify regression
-model = sm.OLS(y, xc)
-ols_res = model.fit()
-print(ols_res.summary())
+    # used for restricted ols
+    x_restricted = x[keep_names].copy()  # <- suggested by lasso regression w/ alpha = 0.3
+    xc = sm.add_constant(x_restricted)
+
+    # specify regression
+    model = sm.OLS(y, xc)
+    ols_res = model.fit()
+    print('\n\n############# OLS with {} LDA topics ############'.format(n), end='\n')
+    print(ols_res.summary())
+    for i in keep_idxs: 
+        print('\nTopic {} : {}'.format(i, lda.show_topic(i)), end='\n\n')
 
 '''
 x = get_dataframe(df['Change'])
