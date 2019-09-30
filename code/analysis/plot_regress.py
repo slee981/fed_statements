@@ -76,7 +76,7 @@ for n in NUM_TOPICS:
     model = sm.OLS(y, xc)
     ols_res = model.fit()
     print('\n\n############# OLS with {} LDA topics ############'.format(n), end='\n')
-    print(ols_res.summary())
+    print(ols_res.summary())    # <- when you want to save, use ols_res.summary().as_latex()
     for i in keep_idxs: 
         print('\nTopic {} : {}'.format(i, lda.show_topic(i)), end='\n\n')
 
