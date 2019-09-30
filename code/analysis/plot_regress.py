@@ -5,6 +5,7 @@
 import pandas as pd 
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
+import gensim
 import numpy as np
 import os
 
@@ -13,12 +14,13 @@ import os
 ###########################################################################
 
 # specs 
-NUM_TOPICS = 10
+NUM_TOPICS = 20
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
 DF_WITH_LDA = os.path.join(DATA_DIR, '{}_topic_lda.csv'.format(NUM_TOPICS))
+LDA_FILE_NAME = os.path.join(DATA_DIR, 'models', '{}_topic_lda'.format(NUM_TOPICS))
 
 ###########################################################################
 # Functions
@@ -31,7 +33,7 @@ def get_topic_dataframe(df):
     rows = df.shape[0]
     num_topics = len(str_to_arr(topic_dists.iloc[0]))
     x = []
-    cols = ['Topic{}'.format(i+1) for i in range(num_topics)]
+    cols = ['Topic{}'.format(i) for i in range(num_topics)]
     for r in range(rows): 
         obs = str_to_arr(topic_dists.iloc[r])
         x.append(obs)
@@ -50,19 +52,24 @@ series = [
 
 # load data 
 df = pd.read_csv(DF_WITH_LDA).drop('Unnamed: 0', axis=1)
+lda = gensim.models.LdaMulticore.load(LDA_FILE_NAME)
 
+# used for lasso 
 x = get_topic_dataframe(df['Topic Dist'])
 xc = sm.add_constant(x)
 
-x_restricted = x[['Topic1', 'Topic7', 'Topic9']].copy()  # <- suggested by lasso regression w/ alpha = 0.3
+y = df['Change'] * 10**4
+model = sm.OLS(y, xc)
+lasso_res = model.fit_regularized(method='elastic_net', alpha=0.3, L1_wt=1.0)
+print(lasso_res.params)
+
+# used for restricted ols
+x_restricted = x[['Topic6', 'Topic10', 'Topic12', 'Topic14', 'Topic17']].copy()  # <- suggested by lasso regression w/ alpha = 0.3
 xc = sm.add_constant(x_restricted)
 
 # specify regression
-y = df['Change'] * 10**4
 model = sm.OLS(y, xc)
 ols_res = model.fit()
-lasso_res = model.fit_regularized(method='elastic_net', alpha=0.3, L1_wt=1.0)
-print(lasso_res.params)
 print(ols_res.summary())
 
 '''

@@ -20,7 +20,6 @@ import os
 
 # specs 
 NUM_TOPICS = 15
-LOOP = 5
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()

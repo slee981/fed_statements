@@ -19,7 +19,7 @@ import os
 ###########################################################################
 
 # specs 
-NUM_TOPICS = [i for i in range(9, 15)]
+NUM_TOPICS = [i for i in range(9, 21)]
 PCT_TOPIC_THRESHOLD = 0.05
 
 N = 2
