@@ -20,7 +20,8 @@ import os
 
 # specs 
 NUM_TOPICS = [i for i in range(9, 21)]
-PCT_TOPIC_THRESHOLD = 0.05
+PCT_TOPIC_THRESHOLD = 0.05 
+ETA = 0.025
 
 N = 2
 N_GRAMS = '{}-gram'.format(N)
@@ -51,7 +52,7 @@ def print_topics():
     for idx, topic in lda_model.print_topics(-1):
         print('Topic: {} \nWords: {}'.format(idx, topic), end='\n\n')
 
-def get_num_topics_per_period(num_topics): 
+def get_num_topics_per_period(num_topics, alpha, eta): 
     global df, corpus, vocab_dict, lda_model
 
     topics_dist_per_section = [[0 for i in range(num_topics)] for i in range(len(corpus))]
@@ -59,7 +60,9 @@ def get_num_topics_per_period(num_topics):
     dates = df['Date'].copy()
 
     print('Fitting model with {} topics...'.format(num_topics))
-    lda_model = gensim.models.LdaMulticore(corpus=corpus, id2word=vocab_dict, num_topics=num_topics, passes=2, workers=2)
+    lda_model = gensim.models.LdaMulticore(corpus=corpus, id2word=vocab_dict,
+                                           num_topics=num_topics, passes=2, workers=2, 
+                                           alpha=alpha, eta=eta,)
 
     print('Saving model...')
     lda_fname = LDA_FILE_NAME_TEMPLATE.format(num_topics)
@@ -106,8 +109,10 @@ if __name__ == '__main__':
     corpus = [vocab_dict.doc2bow(doc) for doc in doc_ngrams]
 
     for n in NUM_TOPICS: 
+        alpha = 50 / n      # <- recommended values per Griffiths and Steyvers 2004 
+        eta = 0.025
         fname = DF_WITH_LDA_TEMPLATE.format(n)
-        topics_per_period = get_num_topics_per_period(num_topics = n)
+        topics_per_period = get_num_topics_per_period(num_topics = n, alpha = alpha, eta = eta)
         df_final = df.merge(topics_per_period, on='Date')
         print(df_final.columns)
         print(df_final[['Date', 'Topic Dist']].head(5))
