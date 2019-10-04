@@ -62,7 +62,7 @@ def get_num_topics_per_period(num_topics, alpha, eta):
     print('Fitting model with {} topics...'.format(num_topics))
     lda_model = gensim.models.LdaMulticore(corpus=corpus, id2word=vocab_dict,
                                            num_topics=num_topics, passes=2, workers=2, 
-                                           alpha=alpha, eta=eta,)
+                                           alpha=alpha, eta=eta)
 
     print('Saving model...')
     lda_fname = LDA_FILE_NAME_TEMPLATE.format(num_topics)

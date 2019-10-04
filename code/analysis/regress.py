@@ -79,20 +79,3 @@ for n in NUM_TOPICS:
     print(ols_res.summary())    # <- when you want to save, use ols_res.summary().as_latex()
     for i in keep_idxs: 
         print('\nTopic {} : {}'.format(i, lda.show_topic(i)), end='\n\n')
-
-'''
-x = get_dataframe(df['Change'])
-y = df['Change 1yr Treasury']
-xc = sm.add_constant(x)
-
-model = sm.OLS(y, xc)
-ols_res = model.fit()
-params = ols_res.params
-intercept, slope = params[0], params[1]
-y_hat = slope * x + intercept 
-
-plt.plot(x,y_hat, '-r')
-plt.scatter(x,y)
-plt.grid()
-plt.show()
-'''

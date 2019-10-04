@@ -48,7 +48,12 @@ def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=3):
     coherence_values = []
     model_list = []
     for num_topics in tqdm(range(start, limit, step)):
-        model = gensim.models.LdaMulticore(corpus=corpus, id2word=dictionary, num_topics=num_topics, passes=2, workers=2)
+        
+        alpha = 50 / num_topics      # <- recommended values per Griffiths and Steyvers 2004 
+        eta = 0.025
+
+        model = gensim.models.LdaMulticore(corpus=corpus, id2word=dictionary, num_topics=num_topics, passes=2, workers=2, 
+                                           alpha=alpha, eta=eta)
         model_list.append(model)
         coherencemodel = gensim.models.CoherenceModel(model=model, texts=texts, dictionary=dictionary, coherence='c_v')
         coherence_values.append(coherencemodel.get_coherence())
