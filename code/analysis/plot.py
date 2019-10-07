@@ -14,7 +14,7 @@ import os
 ###########################################################################
 
 # specs 
-NUM_TOPICS = 20
+NUM_TOPICS = 10
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()
@@ -72,8 +72,18 @@ ols_res = model.fit()
 # make in sample predictions with fit model 
 pred = ols_res.predict(xc)
 
-# plot against actual 
-xtemp = [i for i in range(111)]
-plt.scatter(xtemp, y, color='blue')
-plt.plot(xtemp, pred, color='red')
+# plot estimated against actual 
+dates = [pd.to_datetime(d) for d in df['Date']]
+plt.plot_date(dates, y, color='blue', ms=2)
+plt.plot_date(dates, pred, color='red', ls='-', lw=1, ms=1)
 plt.show()
+
+# plot standard errors 
+y_error = [(a-p) for a, p in zip(y, pred)]
+plt.hist(y_error, bins=50)
+plt.show()
+
+# check if E(error | X) == 0
+residual_model = sm.OLS(y_error, xc)
+residual_ols = residual_model.fit()
+print(residual_ols.summary())
