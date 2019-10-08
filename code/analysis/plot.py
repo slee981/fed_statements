@@ -76,14 +76,17 @@ pred = ols_res.predict(xc)
 dates = [pd.to_datetime(d) for d in df['Date']]
 plt.plot_date(dates, y, color='blue', ms=2)
 plt.plot_date(dates, pred, color='red', ls='-', lw=1, ms=1)
+plt.title('Estimated changes vs. actual (fitted model)')
 plt.show()
 
 # plot standard errors 
 y_error = [(a-p) for a, p in zip(y, pred)]
 plt.hist(y_error, bins=50)
+plt.title('Histogram of errors')
 plt.show()
 
 # check if E(error | X) == 0
+print('\nY_ERRORS = Beta * LDA_TOPICS i.e is E(error | X) == 0 a good assumption?', end='\n\n')
 residual_model = sm.OLS(y_error, xc)
 residual_ols = residual_model.fit()
 print(residual_ols.summary())

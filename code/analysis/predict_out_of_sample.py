@@ -116,14 +116,17 @@ dates = [pd.to_datetime(d) for d in df['Date']]
 
 # histogram plot of errors 
 plt.hist(y_mis, bins=50)
+plt.title('Histogram of errors (out of sample prediction)')
 plt.show()
 
 # plot the leave-one-out, out of sample predictions with the actual predictions
 t = [i for i in range(111)]
 plt.plot_date(dates, y_actuals, color='blue', ms=2)
 plt.plot_date(dates, y_preds, color='red', ls='-', lw=1, ms=1)
+plt.title('Estimated changes vs. actual (out of sample prediction)')
 plt.show()
 
 # check if errors have trend in time 
 plt.scatter(dates, y_mis)
+plt.title('Errors across time')
 plt.show()
