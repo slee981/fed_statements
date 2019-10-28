@@ -9,3 +9,5 @@ data/*
 *.ipynb_checkpoints
 images/ 
 code/analysis/topic_selection/*.csv
+
+.DS_Store

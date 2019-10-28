@@ -1,4 +1,5 @@
 library(tidyverse)
+library(broom)
 
 rm(list=ls())
 
@@ -22,7 +23,12 @@ df$Change1YrBPS <- df$`Change 1yr Treasury` * 100            # stored in pct
 # run simple OLS 
 
 # Change ~ ImpliedFedFunds
-summary(lm(df$ChangeBPS ~ df$ChangeImpliedBPS))
+res <- lm(df$ChangeBPS ~ df$ChangeImpliedBPS)
+res_table <- tidy(res)
+write.csv(res_table, 'singleOLS.csv')
 
 # Change ~ ImpliedFedFunds + 1Yr Treasury 
-summary(lm(df$ChangeBPS ~ df$ChangeImpliedBPS + df$Change1YrBPS))
+res <- lm(df$ChangeBPS ~ df$ChangeImpliedBPS + df$Change1YrBPS)
+res_table <- tidy(res)
+write.csv(res_table, 'multiOLS.csv')
+
