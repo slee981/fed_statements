@@ -3,6 +3,8 @@
 data/* 
 !data/fed_board/ 
 !data/fomc_decisions.csv
+!assets.csv
+!asset_prices.csv
 
 *.ipynb_checkpoints
 images/ 

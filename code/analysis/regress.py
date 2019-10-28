@@ -14,7 +14,7 @@ import os
 ###########################################################################
 
 # specs 
-NUM_TOPICS = range(9,21)
+NUM_TOPICS = [10, 20]
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()
@@ -50,6 +50,7 @@ def get_topic_dataframe(df):
 # ]
 
 for n in NUM_TOPICS: 
+    print('\n\n################################################################\n\n')
     df_fname = DF_WITH_LDA_TEMPLATE.format(n)
     lda_fname = LDA_FILE_NAME_TEMPLATE.format(n)
 
@@ -63,6 +64,12 @@ for n in NUM_TOPICS:
 
     y = df['Change'] * 10**4
     model = sm.OLS(y, xc)
+    
+    # check dumping them all in, naively
+    # ols_all_res = model.fit()
+    # print('\n\n############# OLS with {} LDA topics  ############'.format(n), end='\n')
+    # print(ols_all_res.summary())
+
     lasso_res = model.fit_regularized(method='elastic_net', alpha=0.3, L1_wt=1.0)
     params = lasso_res.params.drop('const')
     keep_idxs = [i for i, coef in enumerate(params) if coef != 0]
@@ -75,7 +82,7 @@ for n in NUM_TOPICS:
     # specify regression
     model = sm.OLS(y, xc)
     ols_res = model.fit()
-    print('\n\n############# OLS with {} LDA topics ############'.format(n), end='\n')
+    print('\n\n############# OLS with {} LDA topics and LASSO selected params ############'.format(n), end='\n')
     print(ols_res.summary())    # <- when you want to save, use ols_res.summary().as_latex()
     for i in keep_idxs: 
         print('\nTopic {} : {}'.format(i, lda.show_topic(i)), end='\n\n')

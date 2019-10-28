@@ -76,7 +76,7 @@ if __name__ =='__main__':
         t_5yr_change = assets_df['FCM5'].loc[assets_df['Date'] == date].item() - assets_df['FCM5'].loc[assets_df['Date'] == last_fomc].item()
         t_10yr_change = assets_df['FCM10'].loc[assets_df['Date'] == date].item() - assets_df['FCM10'].loc[assets_df['Date'] == last_fomc].item()
         t_30yr_change = assets_df['FCM30'].loc[assets_df['Date'] == date].item() - assets_df['FCM30'].loc[assets_df['Date'] == last_fomc].item()
-        implied_change = assets_df['PFNPEC'].loc[assets_df['Date'] == date].item() - assets_df['PFNPEC'].loc[assets_df['Date'] == last_fomc].item()
+        implied_change = assets_df['PFNP'].loc[assets_df['Date'] == date].item() - assets_df['PFNP'].loc[assets_df['Date'] == last_fomc].item()
         sp500_change = assets_df['SP500'].loc[assets_df['Date'] == date].item() - assets_df['SP500'].loc[assets_df['Date'] == last_fomc].item()
         sp500f_change = assets_df['SPSPF'].loc[assets_df['Date'] == date].item() - assets_df['SPSPF'].loc[assets_df['Date'] == last_fomc].item()
 
