@@ -3,6 +3,17 @@ library(broom)
 
 rm(list=ls())
 
+######################################################################
+# FUNCTIONS 
+
+results_to_latex <- function(fname, ...){
+    tex_output <- capture.output(stargazer(...))
+    cat(paste(tex_output, collapse='\n'), '\n', file=fname)
+}
+
+######################################################################
+# MAIN
+
 # get asset prices 
 df_assets <- read_csv('data/assets.csv')
 df_assets <- df_assets %>% select(-c('X1'))
@@ -23,12 +34,18 @@ df$Change1YrBPS <- df$`Change 1yr Treasury` * 100            # stored in pct
 # run simple OLS 
 
 # Change ~ ImpliedFedFunds
-res <- lm(df$ChangeBPS ~ df$ChangeImpliedBPS)
-res_table <- tidy(res)
-write.csv(res_table, 'singleOLS.csv')
+res_uni <- lm(df$ChangeBPS ~ df$ChangeImpliedBPS)
 
 # Change ~ ImpliedFedFunds + 1Yr Treasury 
-res <- lm(df$ChangeBPS ~ df$ChangeImpliedBPS + df$Change1YrBPS)
-res_table <- tidy(res)
-write.csv(res_table, 'multiOLS.csv')
+res_multi <- lm(df$ChangeBPS ~ df$ChangeImpliedBPS + df$Change1YrBPS)
 
+# Export results 
+
+# csv 
+
+# res_table <- tidy(res)                    
+# write.csv(res_table, 'singleOLS.csv')        
+
+# latex 
+results_to_latex('ols_univariate.txt', res_uni, title='Univariate OLS Regression')
+results_to_latex('ols_multivariate.txt', res_multi, title='Multivariate OLS Regression')
