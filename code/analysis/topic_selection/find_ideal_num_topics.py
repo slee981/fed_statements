@@ -6,28 +6,33 @@ import csv
 import os
 
 N = 2
-N_GRAMS = '{}-gram'.format(N)
+N_GRAMS = "{}-gram".format(N)
 VOCAB_SIZE = 15000
 MIN_SPEECH_LENGTH = 50
 
 ROOT_DIR = os.getcwd()
-DATA_DIR = os.path.join(ROOT_DIR, 'data')
-MASTER_DF = os.path.join(DATA_DIR, 'master_df.csv')
-COHERENCE_CHART_NAME = 'coherence_values.png'
-COHERENCE_SCORE_FNAME = os.path.join(ROOT_DIR, 'code', 'analysis', 'coherence_by_topic_num.csv')
+DATA_DIR = os.path.join(ROOT_DIR, "data")
+ASSETS_DIR = os.path.join(ROOT_DIR, "analysis", "topic_selection", "assets")
+MASTER_DF = os.path.join(DATA_DIR, "ngrams_assets_df.csv")
+COHERENCE_CHART_NAME = os.path.join(ASSETS_DIR, "coherence_values.png")
+COHERENCE_SCORE_FNAME = os.path.join(ASSETS_DIR, "coherence_by_topic_num.csv")
 
-def write(lst, fname): 
-    with open(fname, 'a') as f: 
+
+def write(lst, fname):
+    with open(fname, "a") as f:
         writer = csv.writer(f)
         writer.writerow(lst)
 
-def get_ngrams(df): 
+
+def get_ngrams(df):
     def ngram_str_to_lst(ngram_str):
-        if isinstance(ngram_str, float): 
-            ngram_str = ''
-        return ngram_str.split('.')
+        if isinstance(ngram_str, float):
+            ngram_str = ""
+        return ngram_str.split(".")
+
     col = df[N_GRAMS].copy()
     return col.apply(ngram_str_to_lst)
+
 
 def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=3):
     """
@@ -48,25 +53,34 @@ def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=3):
     coherence_values = []
     model_list = []
     for num_topics in tqdm(range(start, limit, step)):
-        
-        alpha = 50 / num_topics      # <- recommended values per Griffiths and Steyvers 2004 
+
+        alpha = 50 / num_topics  # <- recommended values per Griffiths and Steyvers 2004
         eta = 0.025
 
-        model = gensim.models.LdaMulticore(corpus=corpus, id2word=dictionary, num_topics=num_topics, passes=2, workers=2, 
-                                           alpha=alpha, eta=eta)
+        model = gensim.models.LdaMulticore(
+            corpus=corpus,
+            id2word=dictionary,
+            num_topics=num_topics,
+            passes=2,
+            workers=2,
+            alpha=alpha,
+            eta=eta,
+        )
         model_list.append(model)
-        coherencemodel = gensim.models.CoherenceModel(model=model, texts=texts, dictionary=dictionary, coherence='c_v')
+        coherencemodel = gensim.models.CoherenceModel(
+            model=model, texts=texts, dictionary=dictionary, coherence="c_v"
+        )
         coherence_values.append(coherencemodel.get_coherence())
 
     return model_list, coherence_values
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # read data
-    print('Reading data...')
-    df = pd.read_csv(MASTER_DF).drop('Unnamed: 0', axis=1)
-    dates = df['Date'].copy()
+    print("Reading data...")
+    df = pd.read_csv(MASTER_DF).drop("Unnamed: 0", axis=1)
+    dates = df["Date"].copy()
 
     # get ngrams, build vocab, and bag of ngrams
     doc_ngrams = get_ngrams(df)
@@ -75,24 +89,33 @@ if __name__ == '__main__':
     corpus = [vocab_dict.doc2bow(doc) for doc in doc_ngrams]
 
     # Show graph
-    limit=41
-    start=5
-    step=1
+    limit = 41
+    start = 5
+    step = 1
 
-    model_list, coherence_values = compute_coherence_values(dictionary=vocab_dict, corpus=corpus, texts=doc_ngrams, start=start, limit=limit, step=step)
+    model_list, coherence_values = compute_coherence_values(
+        dictionary=vocab_dict,
+        corpus=corpus,
+        texts=doc_ngrams,
+        start=start,
+        limit=limit,
+        step=step,
+    )
 
     x = range(start, limit, step)
-    sorted_scores = sorted(list(zip(*(x, coherence_values))), reverse = True, key = lambda x: x[1])
-    
-    headers = ['NumTopics', 'CoherenceScore']
+    sorted_scores = sorted(
+        list(zip(*(x, coherence_values))), reverse=True, key=lambda x: x[1]
+    )
+
+    headers = ["NumTopics", "CoherenceScore"]
     write(headers, COHERENCE_SCORE_FNAME)
     for i, c in sorted_scores:
-        print('{} topics : {} coherence score'.format(i, c))
-        write([i,c], COHERENCE_SCORE_FNAME)
-    
+        print("{} topics : {} coherence score".format(i, c))
+        write([i, c], COHERENCE_SCORE_FNAME)
+
     plt.plot(x, coherence_values)
     plt.xlabel("Num Topics")
     plt.ylabel("Coherence score")
-    plt.legend(("coherence_values"), loc='best')
+    plt.legend(("coherence_values"), loc="best")
     plt.savefig(COHERENCE_CHART_NAME)
     plt.show()

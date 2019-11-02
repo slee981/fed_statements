@@ -11,3 +11,4 @@ images/
 code/analysis/topic_selection/*.csv
 
 .DS_Store
+*.png
