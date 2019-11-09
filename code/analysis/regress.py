@@ -14,7 +14,7 @@ import os
 ###########################################################################
 
 # specs
-NUM_TOPICS = range(9, 16)
+NUM_TOPICS = range(11, 14)
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()
@@ -32,7 +32,6 @@ def get_topic_dataframe(df):
         return [
             float(ele) for ele in str_arr.replace("[", "").replace("]", "").split(",")
         ]
-
     topic_dists = df.copy()
     rows = df.shape[0]
     num_topics = len(str_to_arr(topic_dists.iloc[0]))

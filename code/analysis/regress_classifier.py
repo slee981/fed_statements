@@ -95,4 +95,5 @@ xc = sm.add_constant(x_restricted)
 # specify regression
 model = sm.OLS(y, xc)
 ols_res = model.fit()
+print("\n\n")
 print(ols_res.summary())  # <- when you want to save, use ols_res.summary().as_latex()
