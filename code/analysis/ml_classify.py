@@ -94,7 +94,7 @@ lda_fname = LDA_FILE_NAME_TEMPLATE.format(n)
 df = pd.read_csv(df_fname).drop("Unnamed: 0", axis=1).set_index("Date")
 lda = gensim.models.LdaMulticore.load(lda_fname)
 
-# used for lasso
+# get the topic distributions frm LDA
 x = get_topic_dataframe(df["Topic Dist"]) * 100  # adjust units to percent
 x.index = df.index
 xc = sm.add_constant(x)
@@ -102,14 +102,15 @@ xc = sm.add_constant(x)
 y = df["Change"].apply(classify_changes)
 y.index = df.index
 
+# merge into a single dataset for splitting
 data = x.merge(y, left_index=True, right_index=True)
-
 topic_cols = [t for t in train_df.columns if "Topic" in t]
+
 train_df, test_df = split_train_test(data)
 
+# split training and testing into features and target
 x_train = train_df[topic_cols]
 y_train = to_categorical(train_df["Change"], N_CATEGORIES)
-
 x_test = test_df[topic_cols]
 y_test = to_categorical(test_df["Change"], N_CATEGORIES)
 
@@ -126,8 +127,10 @@ model.compile(
 )
 model.fit(x_train, y_train, epochs=100)  # starts training
 
+# make predictions on test set 
 y_pred = model.predict(x_test)
 y_pred_max = np.argmax(y_pred, axis=1)
 y_pred_categorical = to_categorical(y_pred_max, N_CATEGORIES)
 
+# check results
 res = metrics.f1_score(y_test, y_pred_categorical, average='micro')
