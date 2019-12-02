@@ -32,6 +32,7 @@ def get_topic_dataframe(df):
         return [
             float(ele) for ele in str_arr.replace("[", "").replace("]", "").split(",")
         ]
+
     topic_dists = df.copy()
     rows = df.shape[0]
     num_topics = len(str_to_arr(topic_dists.iloc[0]))
@@ -94,8 +95,12 @@ for n in NUM_TOPICS:
         ),
         end="\n",
     )
-    print(
-        ols_res.summary()
-    )  # <- when you want to save, use ols_res.summary().as_latex()
+
+    # when you want to save, use ols_res.summary().as_latex()
+    print(ols_res.summary())
+    save = input("Save output? (y/n) >> ")
+    if "y" in save.lower():
+        ols_res.summary().as_latex()
+
     for i in keep_idxs:
         print("\nTopic {} : {}".format(i, lda.show_topic(i)), end="\n\n")

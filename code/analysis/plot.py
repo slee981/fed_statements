@@ -21,6 +21,7 @@ ROOT_DIR = os.getcwd()
 DATA_DIR = os.path.join(ROOT_DIR, "data")
 DF_WITH_LDA_TEMPLATE = os.path.join(DATA_DIR, "lda_dataframes", "{}_topic_lda.csv")
 LDA_FILE_NAME_TEMPLATE = os.path.join(DATA_DIR, "lda_models", "{}_topic_lda")
+FIGURES_DIR = os.path.join(ROOT_DIR, "figures")
 
 ###########################################################################
 # Functions
@@ -78,11 +79,19 @@ ols_res = model.fit()
 pred = ols_res.predict(xc)
 
 # plot estimated against actual
+fname = "fitted_{}_topics.png".format(NUM_TOPICS)
+fpath = os.path.join(FIGURES_DIR, fname)
+
 dates = [pd.to_datetime(d) for d in df["Date"]]
 plt.plot_date(dates, y, color="blue", ms=2)
 plt.plot_date(dates, pred, color="red", ls="-", lw=1, ms=1)
 plt.title("Estimated changes vs. actual (fitted model)")
+
+save = input("Save figure? (y/n) >> ")
+if "y" in save.lower():
+    plt.savefig(fpath)
 plt.show()
+
 
 # plot standard errors
 y_error = [(a - p) for a, p in zip(y, pred)]

@@ -70,7 +70,8 @@ y = df["Change"] * 10 ** 4
 
 # PLOT: ACTUAL INTEREST RATES and topics over time
 
-fname = os.path.join(ROOT_DIR, "figures", "topics_panel.png")
+f = "topics_panel_{}_topics.png".format(NUM_TOPICS)
+fname = os.path.join(ROOT_DIR, "figures", f)
 fig, (ax, ax1, ax2, ax3, ax4) = plt.subplots(5, sharex=True)
 
 # plot estimated against actual
@@ -119,5 +120,4 @@ ax4.set_title("Pct. Discussing Topic 11")
 # SAVE PLOT
 fig.tight_layout()
 fig.savefig(fname)
-
 

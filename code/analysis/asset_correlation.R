@@ -47,5 +47,6 @@ res_multi <- lm(df$ChangeBPS ~ df$ChangeImpliedBPS + df$Change1YrBPS)
 # write.csv(res_table, 'singleOLS.csv')        
 
 # latex 
+
 results_to_latex('ols_univariate.txt', res_uni, title='Univariate OLS Regression')
 results_to_latex('ols_multivariate.txt', res_multi, title='Multivariate OLS Regression')

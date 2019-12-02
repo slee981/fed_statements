@@ -11,6 +11,7 @@ images/
 code/analysis/topic_selection/*.csv
 
 .DS_Store
+.vscode
 *.png
 
 fed-env

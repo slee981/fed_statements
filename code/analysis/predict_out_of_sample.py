@@ -19,13 +19,14 @@ import os
 ###########################################################################
 
 # specs
-NUM_TOPICS = 10
+NUM_TOPICS = 12
 
 # path info  - call from root
 ROOT_DIR = os.getcwd()
 DATA_DIR = os.path.join(ROOT_DIR, "data")
 DF_WITH_LDA_TEMPLATE = os.path.join(DATA_DIR, "lda_dataframes", "{}_topic_lda.csv")
 LDA_FILE_NAME_TEMPLATE = os.path.join(DATA_DIR, "lda_models", "{}_topic_lda")
+FIGURES_DIR = os.path.join(ROOT_DIR, "figures")
 
 ###########################################################################
 # Functions
@@ -33,6 +34,13 @@ LDA_FILE_NAME_TEMPLATE = os.path.join(DATA_DIR, "lda_models", "{}_topic_lda")
 
 
 def get_topic_dataframe(df):
+    """ 
+    INPUT
+        ~ pandas df with topic distributions stored as list in the dataframe 
+    OUTPUT 
+        ~ pandas df with topics each in their own column 
+    """
+
     def str_to_arr(str_arr):
         return [
             float(ele) for ele in str_arr.replace("[", "").replace("]", "").split(",")
@@ -127,11 +135,18 @@ plt.title("Histogram of errors (out of sample prediction)")
 plt.show()
 
 # plot the leave-one-out, out of sample predictions with the actual predictions
+fname = "leave_one_out_{}_topcis.png".format(NUM_TOPICS)
+fpath = os.path.join(FIGURES_DIR, fname)
 t = [i for i in range(111)]
 plt.plot_date(dates, y_actuals, color="blue", ms=2)
 plt.plot_date(dates, y_preds, color="red", ls="-", lw=1, ms=1)
 plt.title("Estimated changes vs. actual (out of sample prediction)")
+
+save = input("Save figure? (y/n) >> ")
+if "y" in save.lower():
+    plt.savefig(fpath)
 plt.show()
+
 
 # check if errors have trend in time
 plt.scatter(dates, y_mis)
