@@ -100,7 +100,21 @@ for n in NUM_TOPICS:
     print(ols_res.summary())
     save = input("Save output? (y/n) >> ")
     if "y" in save.lower():
-        ols_res.summary().as_latex()
+        fname = os.path.join(ROOT_DIR, "figures", "reg_results_{}_topics.tex".format(n))
+        latex = ols_res.summary().as_latex()
+        with open(fname, "w") as f:
+            f.write(
+                """\\documentclass{article}\n\n\\usepackage{amsmath}\n\\usepackage{booktabs}
+                        \n\n\\begin{document} \n\\begin{table}\n"""
+            )
+            f.write(latex)
+            f.write("\n\\end{table} \n\\end{document}")
+
+        # compile and remove aux files
+        cmd_make = "pdflatex -synctex=1 -interaction=nonstopmode {}".format(fname)
+        cmd_clean = "rm *.aux *.synctex.gz *.log *.fls *.fdb_latexmk"
+        ret = os.system(cmd_make)
+        ret = os.system(cmd_clean)
 
     for i in keep_idxs:
         print("\nTopic {} : {}".format(i, lda.show_topic(i)), end="\n\n")

@@ -1,0 +1,45 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{booktabs}
+                        
+
+\begin{document} 
+\begin{table}
+\begin{center}
+\begin{tabular}{lclc}
+\toprule
+\textbf{Dep. Variable:}    &      Change      & \textbf{  R-squared:         } &     0.311   \\
+\textbf{Model:}            &       OLS        & \textbf{  Adj. R-squared:    } &     0.285   \\
+\textbf{Method:}           &  Least Squares   & \textbf{  F-statistic:       } &     11.95   \\
+\textbf{Date:}             & Mon, 02 Dec 2019 & \textbf{  Prob (F-statistic):} &  4.73e-08   \\
+\textbf{Time:}             &     19:58:39     & \textbf{  Log-Likelihood:    } &   -459.16   \\
+\textbf{No. Observations:} &         111      & \textbf{  AIC:               } &     928.3   \\
+\textbf{Df Residuals:}     &         106      & \textbf{  BIC:               } &     941.9   \\
+\textbf{Df Model:}         &           4      & \textbf{                     } &             \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lcccccc}
+                 & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+\midrule
+\textbf{const}   &      -0.8405  &        3.537     &    -0.238  &         0.813        &       -7.854    &        6.173     \\
+\textbf{Topic3}  &     -29.8516  &        9.124     &    -3.272  &         0.001        &      -47.941    &      -11.762     \\
+\textbf{Topic7}  &      20.5297  &        9.256     &     2.218  &         0.029        &        2.180    &       38.880     \\
+\textbf{Topic10} &     -77.3146  &       19.405     &    -3.984  &         0.000        &     -115.786    &      -38.843     \\
+\textbf{Topic11} &      20.9176  &        7.536     &     2.776  &         0.007        &        5.977    &       35.858     \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lclc}
+\textbf{Omnibus:}       & 26.904 & \textbf{  Durbin-Watson:     } &    1.035  \\
+\textbf{Prob(Omnibus):} &  0.000 & \textbf{  Jarque-Bera (JB):  } &   53.707  \\
+\textbf{Skew:}          & -0.978 & \textbf{  Prob(JB):          } & 2.18e-12  \\
+\textbf{Kurtosis:}      &  5.791 & \textbf{  Cond. No.          } &     13.9  \\
+\bottomrule
+\end{tabular}
+%\caption{OLS Regression Results}
+\end{center}
+
+Warnings: \newline
+ [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+\end{table} 
+\end{document}

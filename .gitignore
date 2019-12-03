@@ -13,5 +13,6 @@ code/analysis/topic_selection/*.csv
 .DS_Store
 .vscode
 *.png
+*.pdf
 
 fed-env

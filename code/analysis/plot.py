@@ -33,7 +33,6 @@ def get_topic_dataframe(df):
         return [
             float(ele) for ele in str_arr.replace("[", "").replace("]", "").split(",")
         ]
-
     topic_dists = df.copy()
     rows = df.shape[0]
     num_topics = len(str_to_arr(topic_dists.iloc[0]))
