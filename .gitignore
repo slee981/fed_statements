@@ -1,5 +1,6 @@
 *.ini
 .dropbox
+figures
 data/* 
 !data/fed_board/ 
 !data/fomc_decisions.csv
@@ -9,10 +10,10 @@ data/*
 *.ipynb_checkpoints
 images/ 
 code/analysis/topic_selection/*.csv
+code/scrape/chi
 
 .DS_Store
 .vscode
 *.png
-*.pdf
 
 fed-env
